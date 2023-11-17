@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSV to Chart</title>
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>CSV to Charts</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div style="display: flex;">
+        <canvas id="line-chart" style="width: 33%;"></canvas>
+        <canvas id="bar-chart" style="width: 33%;"></canvas>
+        <canvas id="pie-chart" style="width: 33%;"></canvas>
+    </div>
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Use Chart.js to create a bar chart
+                const chartData = data.data;
+                console.log(chartData);
+
+                const labels = chartData.map(function(d) {return d.place_id});
+                console.log(labels)
+                //map the data
+                const grocery_and_pharmacy_percent = chartData.map(function(d) {return d.grocery_and_pharmacy_percent_change_from_baseline});
+                const parks_percent = chartData.map(function(d) {return d.parks_percent_change_from_baseline});
+                const residential_percent = chartData.map(function(d) {return d.residential_percent_change_from_baseline});
+                const retail_and_recreation = chartData.map(function(d) {return d.retail_and_recreation_percent_change_from_baseline});
+                const transit_stations_percent = chartData.map(function(d) {return d.transit_stations_percent_change_from_baseline});
+                const workplaces_percent = chartData.map(function(d) {return d.workplaces_percent_change_from_baseline});
+
+                var colors = chartData.map(function(d) {return d.Gender === 'Female' ? '#F15F36' : '#19A0AA';});
+
+                const ctx = document.getElementById('bar-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    options: {
+                        maintainAspectRatio: true,
+                        plugins: {
+                            title: {
+                              display: true,
+                              text: 'Region Mobility ZA - Stacked'
+                            },
+                        },
+                        responsive: true,
+                        scales:{
+                            x:{
+                                stacked: true,
+                            },
+                            y:{
+                                stacked: true
+                            }
+                        }
+                      },
+                    data: {
+                        //data to be displayed and the labels
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Grocery And Pharmacy',
+                                data: grocery_and_pharmacy_percent,
+                                backgroundColor: '#2098ae',
+                                
+                            },
+                            {
+                                label: 'Parks',
+                                data: parks_percent,
+                                backgroundColor: '#7b4ba2',
+                                
+                            },
+                            {
+                                label: 'Residential',
+                                data: residential_percent,
+                                backgroundColor: '#F15F36',
+                                
+                            },
+                            {
+                                label: 'Retail And Recreation',
+                                data: retail_and_recreation,
+                                backgroundColor: '#19A0AA',
+                                
+                            },
+                        ]
+                    }
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
